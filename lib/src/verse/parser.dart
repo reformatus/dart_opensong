@@ -1,9 +1,17 @@
-part of 'types/song.dart';
+import '../song/song.dart';
+import 'verse.dart';
 
-enum SongParseErrorType { unsupportedLineType }
+/// Parses chords and lyrics to verses. Returns a Song and a list of errors encountered to display for the user.
 
-// TODO add legend of what each part of opensong syntax is named
-Song parseFromString(String string) {
+// Explanation of parsing variables below:
+//[V] <- tag
+//.C  D   Hmsus4add9 Ab <- chords
+//1Ez egy vers_______szak <- verse lines
+//2<- line indexes
+//[P1] <- "P" tagType; "1" tagIndex
+// This is the pre-chorus
+(List<Verse> verses, List<(SongParseErrorType type, int? lineNumber, String? offendingLine)> errors)
+getVersesFromString(String string) {
   List<Verse> verses = [];
   List<(SongParseErrorType type, int? lineNumber, String? offendingLine)> errors = [];
 
@@ -77,10 +85,9 @@ Song parseFromString(String string) {
     i++;
   }
 
-  // TODO This adds redundant last chords line when not necessary - fix pls
   finalizeTag();
 
-  return Song(verses);
+  return (verses, errors);
 }
 
 VerseLine parseLineFromSeparate(String chords, String lyrics) {

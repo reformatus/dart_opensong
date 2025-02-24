@@ -1,11 +1,3 @@
-part '../parser.dart';
-
-class Song {
-  List<Verse> verses;
-
-  Song(this.verses);
-}
-
 class Verse {
   String? type;
   int? index;
