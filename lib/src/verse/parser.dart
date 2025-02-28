@@ -108,16 +108,21 @@ List<Verse> getVersesFromString(String string) {
 
 VerseLine parseLineFromSeparate(String chords, String lyrics) {
   List<VerseLineSegment> lineSegments = [];
-  var chordMatches = RegExp(r'[^ ]+').allMatches(chords).toList();
+  List<({int start, String? chord})> chordMatches =
+      RegExp(r'[^ ]+').allMatches(chords).map((e) => (start: e.start, chord: e[0])).toList();
 
   if (chordMatches.isEmpty) {
     return VerseLine.justLyrics(lyrics);
   }
 
+  if (chordMatches[0].start != 0) {
+    chordMatches.insert(0, (start: 0, chord: null));
+  }
+
   for (var i = 0; i < chordMatches.length; i++) {
     int start = chordMatches[i].start;
     if (start >= lyrics.length) {
-      lineSegments.add(VerseLineSegment.justChord(chordMatches[i][0]));
+      lineSegments.add(VerseLineSegment.justChord(chordMatches[i].chord));
       continue;
     }
 
@@ -129,7 +134,18 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
       }
     }
 
-    lineSegments.add(VerseLineSegment(chordMatches[i][0], lyrics.substring(start, end).replaceAll('_', '')));
+    var resultLyrics = lyrics.substring(start, end);
+    // Remove chord alignment padding
+    resultLyrics = resultLyrics.replaceAll('_', '');
+    // Replace two or more spaces with a single one
+    resultLyrics = resultLyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
+
+    // Remove leading space from line beginning and when not informative for hyphenation
+    if (lineSegments.isEmpty || lineSegments.last.lyrics.endsWith(' ')) {
+      resultLyrics = resultLyrics.replaceAll(RegExp(r'^[ ]+', multiLine: true), '');
+    }
+
+    lineSegments.add(VerseLineSegment(chordMatches[i].chord, resultLyrics));
   }
 
   return VerseLine(lineSegments);

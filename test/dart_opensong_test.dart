@@ -30,9 +30,15 @@ void main() {
 2hello
 [P]
 .B A C# H B
+[T1]
+.B A C# H B
+     Text that starts later
+[T2]
+.    B A C#   H        B
+ Chord_s that  start   later
 """);
       expect(verses.every((e) => e.errorCount == 0), isTrue);
-      expect(verses, hasLength(3));
+      expect(verses, hasLength(5));
 
       expect(verses[0].tag, equals("V1"));
       expect(verses[0].parts, hasLength(2));
