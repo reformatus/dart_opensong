@@ -2,6 +2,7 @@ name: dart_opensong
 description: Support for OpenSong file formats in Dart.
 repository: https://github.com/reformatus/dart_opensong
 issue_tracker: https://github.com/reformatus/dart_opensong/issues
+documentation: https://reflabs.hu/dart_opensong/
 
 version: 0.0.1
 
