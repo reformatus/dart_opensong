@@ -1,7 +1,9 @@
 name: dart_opensong
-description: A starting point for Dart libraries or applications.
-version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+description: Support for OpenSong file formats in Dart.
+repository: https://github.com/reformatus/dart_opensong
+issue_tracker: https://github.com/reformatus/dart_opensong/issues
+
+version: 0.0.1-dev
 
 environment:
   sdk: ^3.7.0

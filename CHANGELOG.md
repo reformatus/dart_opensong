@@ -1,3 +1,3 @@
-## 1.0.0
+## 0.0.1-dev
 
-- Initial version.
+- Initial release of lyrics format parsing
