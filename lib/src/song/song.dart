@@ -1,7 +1,5 @@
 import '../verse/verse.dart';
 
-enum SongParseErrorType { unsupportedLineType }
-
 class Song {
   List<Verse> verses;
   // TODO Other fields

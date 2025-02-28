@@ -1,30 +1,58 @@
 class Verse {
-  String? type;
+  String type;
   int? index;
 
-  List<VerseLine> lines;
+  List<VersePart> parts;
 
-  Verse(this.type, this.index, this.lines);
+  Verse(this.type, this.index, this.parts);
 
-  String get lyrics => lines.map((e) => e.lyrics).join("\n");
+  String get tag => "$type${index ?? ""}";
+  String get lyrics => parts.whereType<VerseLine>().map((e) => e.lyrics).join("\n");
+  int get errorCount => parts.whereType<PartWithError>().length;
 }
 
-class VerseLine {
-  List<LinePart> parts;
+sealed class VersePart {
+  factory VersePart.newSlide() => NewSlide();
+  factory VersePart.emptyLine() => EmptyLine();
+  factory VersePart.line(List<VerseLineSegment> parts) => VerseLine(parts);
+  factory VersePart.comment(String comment) => CommentLine(comment);
+}
 
-  VerseLine(this.parts);
+class VerseLine implements VersePart {
+  List<VerseLineSegment> segments;
+
+  VerseLine(this.segments);
 
   /// Initializes a Line from a single String without chords.
-  VerseLine.justLyrics(String lyrics) : parts = [LinePart.justLyrics(lyrics)];
+  VerseLine.justLyrics(String lyrics) : segments = [VerseLineSegment.justLyrics(lyrics)];
 
-  String get lyrics => parts.map((e) => e.lyrics).join();
+  String get lyrics => segments.map((e) => e.lyrics).join();
 }
 
-class LinePart {
-  String? chord;
-  String? lyrics;
+class NewSlide implements VersePart {}
 
-  LinePart(this.chord, this.lyrics);
-  LinePart.justLyrics(this.lyrics);
-  LinePart.justChord(this.chord);
+class EmptyLine implements VersePart {}
+
+class CommentLine implements VersePart {
+  String comment;
+
+  CommentLine(this.comment);
+}
+
+sealed class PartWithError implements VersePart {
+  String original;
+  PartWithError(this.original);
+}
+
+class UnsupportedLine extends PartWithError {
+  UnsupportedLine(super.original);
+}
+
+class VerseLineSegment {
+  String? chord;
+  String lyrics;
+
+  VerseLineSegment(this.chord, this.lyrics);
+  VerseLineSegment.justLyrics(this.lyrics);
+  VerseLineSegment.justChord(this.chord) : lyrics = "";
 }
