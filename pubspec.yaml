@@ -3,7 +3,7 @@ description: Support for OpenSong file formats in Dart.
 repository: https://github.com/reformatus/dart_opensong
 issue_tracker: https://github.com/reformatus/dart_opensong/issues
 
-version: 0.0.1-dev
+version: 0.0.1
 
 environment:
   sdk: ^3.7.0
