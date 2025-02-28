@@ -13,7 +13,7 @@ This package provides partial support for reading/writing [OpenSong](https://ope
 **Planned features:**
 - Read and parse a whole OpenSong song file with all relevant fields
 - Partial support for song styles and verse styles
-- Partial support for writing to OpenSong format ()
+- Partial support for writing to OpenSong format
 
 ## Usage
 
