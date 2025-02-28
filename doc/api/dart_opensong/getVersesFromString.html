@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the getVersesFromString function from the dart_opensong library, for the Dart programming language.">
+  <title>getVersesFromString function - dart_opensong library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_opensong</a></li>
+    <li><a href="../dart_opensong">dart_opensong.dart</a></li>
+    <li class="self-crumb">getVersesFromString function</li>
+  </ol>
+  <div class="self-name">getVersesFromString</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="dart_opensong&#47;dart_opensong-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">getVersesFromString</span> function 
+ 
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+<span class="returntype"><a href="https://api.dart.dev/stable/3.7.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../dart_opensong/Verse-class.html">Verse</a></span>&gt;</span></span>
+<span class="name ">getVersesFromString</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="getVersesFromString-param-string"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.7.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">string</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Parses chords and lyrics to verses. Returns a List of Verses and a List of errors encountered to display for the user.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">&#47;&#47; Explanation of parsing variables below:
+&#47;&#47;[V] &lt;- tag
+&#47;&#47;.C  D    Hmsus4add9 Ab &lt;- chords
+&#47;&#47;1This is a ver______se &lt;- verse lines
+&#47;&#47;2&lt;- line indexes
+&#47;&#47;[P1] &lt;- &quot;P&quot; tagType; &quot;1&quot; tagIndex
+&#47;&#47; This is the pre-chorus
+List&lt;Verse&gt; getVersesFromString(String string) {
+  List&lt;Verse&gt; verses = [];
+
+  List&lt;({String lineIndex, VersePart versePart})&gt; currentVerseParts = [];
+  String currentTagType = &quot;&quot;;
+  String currentTagIndex = &quot;&quot;;
+
+  String currentChords = &quot;&quot;;
+
+  void finalizeTag() {
+    &#47;&#47; Get unique line indexes
+    Set&lt;String&gt; lineIndexes = {};
+    lineIndexes.addAll(currentVerseParts.map((e) =&gt; e.lineIndex));
+
+    if (lineIndexes.isEmpty &amp;&amp; currentChords.isNotEmpty) {
+      verses.add(
+        Verse(currentTagType, int.tryParse(currentTagIndex), [parseLineFromSeparate(currentChords, &quot;&quot;)]),
+      );
+    } else {
+      &#47;&#47; TODO trim whitespace everywhere?
+      for (String lineIndex in lineIndexes) {
+        List&lt;VersePart&gt; lines =
+            currentVerseParts.where((e) =&gt; e.lineIndex == lineIndex).map((e) =&gt; e.versePart).toList();
+        verses.add(Verse(currentTagType, int.tryParse(currentTagIndex + lineIndex), lines));
+      }
+    }
+    currentTagType = &quot;&quot;;
+    currentTagIndex = &quot;&quot;;
+    currentChords = &quot;&quot;;
+    currentVerseParts = [];
+  }
+
+  String prevLine = &quot;&quot;;
+  for (String line in string.split(&#39;\n&#39;)) {
+    &#47;&#47; Trim empty lines
+    if (line.length &lt; 2) continue;
+
+    if (line.startsWith(RegExp(r&#39;[\p{L}0-9 ]&#39;, unicode: true))) {
+      String lineIndex = &quot;&quot;;
+
+      &#47;&#47;! Lyrics line
+      &#47;&#47; Add space to beginning of line if missing
+      if (!line.startsWith(RegExp(r&#39;[0-9 ]&#39;))) {
+        line = &#39; $line&#39;;
+      }
+      if (line.startsWith(RegExp(r&#39;[0-9]&#39;))) {
+        lineIndex = line.substring(0, 1);
+      }
+      &#47;&#47; Presentation markers
+      if (line.startsWith(&#39;|&#39;, 1)) {
+        if (line.startsWith(&#39;||&#39;, 1)) {
+          currentVerseParts.add((lineIndex: lineIndex, versePart: VersePart.newSlide()));
+        } else {
+          currentVerseParts.add((lineIndex: lineIndex, versePart: VersePart.emptyLine()));
+        }
+      } else {
+        currentVerseParts.add((
+          lineIndex: lineIndex,
+          versePart: parseLineFromSeparate(currentChords, line.substring(1)),
+        ));
+      }
+    }
+    &#47;&#47;! Chords line
+    else if (line.startsWith(&#39;.&#39;)) {
+      &#47;&#47; If we already had current chords, then add them as a line without lyrics (Vamp)
+      if (prevLine.startsWith(&#39;.&#39;)) {
+        currentVerseParts.add((lineIndex: &quot;&quot;, versePart: parseLineFromSeparate(currentChords, &quot;&quot;)));
+      }
+      currentChords = line.substring(1);
+    }
+    &#47;&#47;! New tag
+    else if (line.startsWith(&#39;[&#39;)) {
+      finalizeTag();
+
+      var typeMatch = RegExp(r&quot;[\p{L}]+&quot;, unicode: true).firstMatch(line.substring(1));
+      currentTagType = typeMatch?[0] ?? &quot;&quot;;
+
+      var indexMatch = RegExp(r&quot;[0-9]+&quot;).firstMatch(line.substring(1).substring(typeMatch?.end ?? 0));
+      currentTagIndex = indexMatch?[0] ?? &quot;&quot;;
+    }
+    &#47;&#47;! Comment
+    else if (line.startsWith(&#39;;&#39;)) {
+      currentVerseParts.add((lineIndex: &quot;&quot;, versePart: VersePart.comment(line.substring(1))));
+    }
+    &#47;&#47;! Unhandled line type (printing instructions)
+    else {
+      currentVerseParts.add((lineIndex: &quot;&quot;, versePart: UnsupportedLine(line)));
+    }
+
+    prevLine = line;
+  }
+
+  finalizeTag();
+
+  return verses;
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_opensong</a></li>
+    <li><a href="../dart_opensong">dart_opensong</a></li>
+    <li class="self-crumb">getVersesFromString function</li>
+</ol>
+
+    <h5>dart_opensong library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_opensong
+      0.0.1
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
