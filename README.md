@@ -1,5 +1,7 @@
+> [!CAUTION]
+> Still under early development. Expect breaking changes until 1.0 is released.
+
 This package provides partial support for reading/writing [OpenSong](https://opensong.org/development/file-formats/) Song files.
-*Still under early development. Expect breaking changes until 1.0 is released.*
 
 ## Features
 
