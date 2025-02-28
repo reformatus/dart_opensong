@@ -1,8 +1,9 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+// @Projekt https://dart.dev/tools/pub/create-packages
+
+/// This package provides partial support for reading/writing [OpenSong](https://opensong.org/development/file-formats/) Song files.
+/// *Still under early development. Expect breaking changes until 1.0 is released.*
 library;
 
-export 'src/dart_opensong_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/song/song.dart';
+export 'src/verse/verse.dart';
+export 'src/verse/parser.dart' show getVersesFromString;
