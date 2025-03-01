@@ -107,6 +107,8 @@ List<Verse> getVersesFromString(String string) {
 }
 
 VerseLine parseLineFromSeparate(String chords, String lyrics) {
+  lyrics = lyrics.padRight(chords.length);
+
   List<VerseLineSegment> lineSegments = [];
   List<({int start, String? chord})> chordMatches =
       RegExp(r'[^ ]+').allMatches(chords).map((e) => (start: e.start, chord: e[0])).toList();
@@ -135,17 +137,30 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
     }
 
     var resultLyrics = lyrics.substring(start, end);
+
     // Remove chord alignment padding
     resultLyrics = resultLyrics.replaceAll('_', '');
     // Replace two or more spaces with a single one
-    resultLyrics = resultLyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
-
-    // Remove leading space from line beginning and when not informative for hyphenation
-    if (lineSegments.isEmpty || lineSegments.last.lyrics.endsWith(' ')) {
-      resultLyrics = resultLyrics.replaceAll(RegExp(r'^[ ]+', multiLine: true), '');
-    }
 
     lineSegments.add(VerseLineSegment(chordMatches[i].chord, resultLyrics));
+  }
+
+  // Get hyphenation and leading spaces in order
+  for (var i = 0; i < lineSegments.length; i++) {
+    VerseLineSegment current = lineSegments[i];
+
+    // Cancel hyphen if next has leading space or is end of line
+    bool nextCancelsHyphen =
+        (lineSegments.length > i + 1) ? lineSegments[i + 1].lyrics.startsWith(' ') : true;
+
+    if (!current.lyrics.endsWith(' ') && !nextCancelsHyphen) current.hyphenAfter = true;
+
+    // Remove leading space from current if previous already has trailing or is empty
+    if (i > 0 && (lineSegments[i - 1].lyrics.endsWith(' ') || lineSegments[i - 1].lyrics.isEmpty)) {
+      current.lyrics = current.lyrics.replaceAll(RegExp(r'^[ ]+', multiLine: true), '');
+    }
+
+    current.lyrics = current.lyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
   }
 
   return VerseLine(lineSegments);

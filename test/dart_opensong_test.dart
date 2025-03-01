@@ -36,9 +36,16 @@ void main() {
 [T2]
 .    B A C#   H        B
  Chord_s that  start   later
+[T3]
+.C     D     E    F G E/H C     D
+ Multi-chord word se______paration
+ Multi-chord              space
+[T4]
+.C   D       E        G    H
+ Non-standard    chord placement
 """);
       expect(verses.every((e) => e.errorCount == 0), isTrue);
-      expect(verses, hasLength(5));
+      expect(verses, hasLength(7));
 
       expect(verses[0].tag, equals("V1"));
       expect(verses[0].parts, hasLength(2));
@@ -47,11 +54,11 @@ void main() {
       expect((verses[0].parts[0] as VerseLine).segments[0].chord, equals("C"));
       expect((verses[0].parts[0] as VerseLine).segments[0].lyrics, equals("abcd"));
       expect((verses[0].parts[0] as VerseLine).segments[2].chord, equals("A#"));
-      expect((verses[0].parts[0] as VerseLine).segments[2].lyrics, equals("k"));
+      expect((verses[0].parts[0] as VerseLine).segments[2].lyrics, equals("k "));
       expect((verses[0].parts[0] as VerseLine).segments[3].chord, equals("C"));
       expect((verses[0].parts[0] as VerseLine).segments[3].lyrics, isEmpty);
-      expect((verses[0].parts[0] as VerseLine).lyrics, equals("abcdefghijk"));
-      expect((verses[0].parts[1] as VerseLine).lyrics, equals("hello"));
+      expect((verses[0].parts[0] as VerseLine).lyrics, equals("abcdefghijk "));
+      expect((verses[0].parts[1] as VerseLine).lyrics, equals("hello "));
 
       expect(verses[1].tag, equals("V2"));
       expect(verses[1].parts, hasLength(2));
@@ -60,14 +67,25 @@ void main() {
       expect((verses[1].parts[0] as VerseLine).segments[0].chord, equals("C"));
       expect((verses[1].parts[0] as VerseLine).segments[0].lyrics, equals("ijkl"));
       expect((verses[1].parts[0] as VerseLine).segments[2].chord, equals("A#"));
-      expect((verses[1].parts[0] as VerseLine).segments[2].lyrics, equals("s"));
+      expect((verses[1].parts[0] as VerseLine).segments[2].lyrics, equals("s "));
       expect((verses[1].parts[0] as VerseLine).segments[3].chord, equals("C"));
       expect((verses[1].parts[0] as VerseLine).segments[3].lyrics, isEmpty);
-      expect((verses[1].parts[0] as VerseLine).lyrics, equals("ijklmnopqrs"));
-      expect((verses[1].parts[1] as VerseLine).lyrics, equals("hello"));
+      expect((verses[1].parts[0] as VerseLine).lyrics, equals("ijklmnopqrs "));
+      expect((verses[1].parts[1] as VerseLine).lyrics, equals("hello "));
 
       expect((verses[2].parts[0] as VerseLine).segments, hasLength(5));
-      expect(verses[2].lyrics, isEmpty);
+      expect(verses[2].lyrics, equals(' '));
+
+      expect((verses[5].parts[0] as VerseLine).segments[3].hyphenAfter, isTrue);
+      expect((verses[5].parts[0] as VerseLine).segments[4].hyphenAfter, isTrue);
+      expect((verses[5].parts[0] as VerseLine).segments[5].hyphenAfter, isTrue);
+
+      expect((verses[5].parts[1] as VerseLine).segments[3].hyphenAfter, isFalse);
+      expect((verses[5].parts[1] as VerseLine).segments[4].hyphenAfter, isFalse);
+      expect((verses[5].parts[1] as VerseLine).segments[5].hyphenAfter, isFalse);
+
+      expect((verses[6].parts[0] as VerseLine).segments[2].hyphenAfter, isFalse);
+      expect((verses[6].parts[0] as VerseLine).segments[3].hyphenAfter, isTrue);
     });
 
     test('Non-standard tag definitions', () {
