@@ -74,7 +74,7 @@ void main() {
       expect((verses[1].parts[1] as VerseLine).lyrics, equals("hello "));
 
       expect((verses[2].parts[0] as VerseLine).segments, hasLength(5));
-      expect(verses[2].lyrics, equals(' '));
+      expect(verses[2].lyrics, isEmpty);
 
       expect((verses[5].parts[0] as VerseLine).segments[3].hyphenAfter, isTrue);
       expect((verses[5].parts[0] as VerseLine).segments[4].hyphenAfter, isTrue);

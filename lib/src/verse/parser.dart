@@ -140,7 +140,6 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
 
     // Remove chord alignment padding
     resultLyrics = resultLyrics.replaceAll('_', '');
-    // Replace two or more spaces with a single one
 
     lineSegments.add(VerseLineSegment(chordMatches[i].chord, resultLyrics));
   }
@@ -160,8 +159,13 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
       current.lyrics = current.lyrics.replaceAll(RegExp(r'^[ ]+', multiLine: true), '');
     }
 
+    // Replace two or more spaces with a single one
     current.lyrics = current.lyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
+    if (current.lyrics == ' ') current.lyrics = '';
   }
+
+  // Clean up trailing spaces from last
+  lineSegments.last.lyrics = lineSegments.last.lyrics.replaceAll(RegExp(r'[ ]+$', multiLine: true), '');
 
   return VerseLine(lineSegments);
 }
