@@ -39,7 +39,10 @@ void main() {
       expect(verses[0].parts[0], TypeMatcher<VerseLine>());
       expect((verses[0].parts[0] as VerseLine).segments, hasLength(4));
       expect((verses[0].parts[0] as VerseLine).segments[0].chord, equals("C"));
-      expect((verses[0].parts[0] as VerseLine).segments[0].lyrics, equals("abcd"));
+      expect(
+        (verses[0].parts[0] as VerseLine).segments[0].lyrics,
+        equals("abcd"),
+      );
       expect((verses[0].parts[0] as VerseLine).segments[2].chord, equals("A#"));
       expect((verses[0].parts[0] as VerseLine).segments[2].lyrics, equals("k"));
       expect((verses[0].parts[0] as VerseLine).segments[3].chord, equals("C"));
@@ -52,7 +55,10 @@ void main() {
       expect(verses[1].parts[0], TypeMatcher<VerseLine>());
       expect((verses[1].parts[0] as VerseLine).segments, hasLength(4));
       expect((verses[1].parts[0] as VerseLine).segments[0].chord, equals("C"));
-      expect((verses[1].parts[0] as VerseLine).segments[0].lyrics, equals("ijkl"));
+      expect(
+        (verses[1].parts[0] as VerseLine).segments[0].lyrics,
+        equals("ijkl"),
+      );
       expect((verses[1].parts[0] as VerseLine).segments[2].chord, equals("A#"));
       expect((verses[1].parts[0] as VerseLine).segments[2].lyrics, equals("s"));
       expect((verses[1].parts[0] as VerseLine).segments[3].chord, equals("C"));
@@ -115,13 +121,18 @@ void main() {
  This is supposed to be on a new printed page
 ---
  And this is supposed to be in a new column
-!This literally does not exist
+!This literally does not exist (we still show it)
  ||
  Last line on a new slide
 """);
       var verse = verses[0];
-      expect(verse.errorCount, equals(3));
-      expect((verse.parts.whereType<PartWithError>()).every((e) => e is UnsupportedLine), isTrue);
+      expect(verse.errorCount, equals(2));
+      expect(
+        (verse.parts.whereType<PartWithError>()).every(
+          (e) => e is UnsupportedLine,
+        ),
+        isTrue,
+      );
 
       expect(verse.parts[0], TypeMatcher<VerseLine>());
       expect(verse.parts[1], TypeMatcher<EmptyLine>());
@@ -130,7 +141,10 @@ void main() {
       expect(verse.parts[4], TypeMatcher<VerseLine>());
 
       expect(verse.parts[5], TypeMatcher<CommentLine>());
-      expect((verse.parts[5] as CommentLine).comment, equals("This is a comment"));
+      expect(
+        (verse.parts[5] as CommentLine).comment,
+        equals("This is a comment"),
+      );
 
       expect(verse.parts[6], TypeMatcher<VerseLine>());
       expect(verse.parts[8], TypeMatcher<VerseLine>());

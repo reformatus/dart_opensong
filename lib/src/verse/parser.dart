@@ -25,14 +25,24 @@ List<Verse> getVersesFromString(String string) {
 
     if (lineIndexes.isEmpty && currentChords.isNotEmpty) {
       verses.add(
-        Verse(currentTagType, int.tryParse(currentTagIndex), [parseLineFromSeparate(currentChords, "")]),
+        Verse(currentTagType, int.tryParse(currentTagIndex), [
+          parseLineFromSeparate(currentChords, ""),
+        ]),
       );
     } else {
       // TODO trim whitespace everywhere?
       for (String lineIndex in lineIndexes) {
-        List<VersePart> lines =
-            currentVerseParts.where((e) => e.lineIndex == lineIndex).map((e) => e.versePart).toList();
-        verses.add(Verse(currentTagType, int.tryParse(currentTagIndex + lineIndex), lines));
+        List<VersePart> lines = currentVerseParts
+            .where((e) => e.lineIndex == lineIndex)
+            .map((e) => e.versePart)
+            .toList();
+        verses.add(
+          Verse(
+            currentTagType,
+            int.tryParse(currentTagIndex + lineIndex),
+            lines,
+          ),
+        );
       }
     }
     currentTagType = "";
@@ -44,9 +54,45 @@ List<Verse> getVersesFromString(String string) {
   String prevLine = "";
   for (String line in string.split('\n')) {
     // Trim empty lines
-    if (line.length < 2) continue;
+    if (line.trim().isEmpty)
+      continue;
+    //! Chords line
+    else if (line.startsWith('.')) {
+      // If we already had current chords, then add them as a line without lyrics (Vamp)
+      if (prevLine.startsWith('.')) {
+        currentVerseParts.add((
+          lineIndex: "",
+          versePart: parseLineFromSeparate(currentChords, ""),
+        ));
+      }
+      currentChords = line.substring(1);
+    }
+    //! New tag
+    else if (line.startsWith('[')) {
+      finalizeTag();
 
-    if (line.startsWith(RegExp(r'[\p{L}0-9 ]', unicode: true))) {
+      var typeMatch = RegExp(
+        r"[\p{L}]+",
+        unicode: true,
+      ).firstMatch(line.substring(1));
+      currentTagType = typeMatch?[0] ?? "";
+
+      var indexMatch = RegExp(
+        r"[0-9]+",
+      ).firstMatch(line.substring(1).substring(typeMatch?.end ?? 0));
+      currentTagIndex = indexMatch?[0] ?? "";
+    }
+    //! Comment
+    else if (line.startsWith(';')) {
+      currentVerseParts.add((
+        lineIndex: "",
+        versePart: VersePart.comment(line.substring(1)),
+      ));
+    }
+    //! Unhandled line type (printing instructions)
+    else if (line.startsWith('-')) {
+      currentVerseParts.add((lineIndex: "", versePart: UnsupportedLine(line)));
+    } else {
       String lineIndex = "";
 
       //! Lyrics line
@@ -60,9 +106,15 @@ List<Verse> getVersesFromString(String string) {
       // Presentation markers
       if (line.startsWith('|', 1)) {
         if (line.startsWith('||', 1)) {
-          currentVerseParts.add((lineIndex: lineIndex, versePart: VersePart.newSlide()));
+          currentVerseParts.add((
+            lineIndex: lineIndex,
+            versePart: VersePart.newSlide(),
+          ));
         } else {
-          currentVerseParts.add((lineIndex: lineIndex, versePart: VersePart.emptyLine()));
+          currentVerseParts.add((
+            lineIndex: lineIndex,
+            versePart: VersePart.emptyLine(),
+          ));
         }
       } else {
         currentVerseParts.add((
@@ -70,32 +122,6 @@ List<Verse> getVersesFromString(String string) {
           versePart: parseLineFromSeparate(currentChords, line.substring(1)),
         ));
       }
-    }
-    //! Chords line
-    else if (line.startsWith('.')) {
-      // If we already had current chords, then add them as a line without lyrics (Vamp)
-      if (prevLine.startsWith('.')) {
-        currentVerseParts.add((lineIndex: "", versePart: parseLineFromSeparate(currentChords, "")));
-      }
-      currentChords = line.substring(1);
-    }
-    //! New tag
-    else if (line.startsWith('[')) {
-      finalizeTag();
-
-      var typeMatch = RegExp(r"[\p{L}]+", unicode: true).firstMatch(line.substring(1));
-      currentTagType = typeMatch?[0] ?? "";
-
-      var indexMatch = RegExp(r"[0-9]+").firstMatch(line.substring(1).substring(typeMatch?.end ?? 0));
-      currentTagIndex = indexMatch?[0] ?? "";
-    }
-    //! Comment
-    else if (line.startsWith(';')) {
-      currentVerseParts.add((lineIndex: "", versePart: VersePart.comment(line.substring(1))));
-    }
-    //! Unhandled line type (printing instructions)
-    else {
-      currentVerseParts.add((lineIndex: "", versePart: UnsupportedLine(line)));
     }
 
     prevLine = line;
@@ -129,7 +155,12 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
       }
     }
 
-    lineSegments.add(VerseLineSegment(chordMatches[i][0], lyrics.substring(start, end).replaceAll('_', '')));
+    lineSegments.add(
+      VerseLineSegment(
+        chordMatches[i][0],
+        lyrics.substring(start, end).replaceAll('_', ''),
+      ),
+    );
   }
 
   return VerseLine(lineSegments);
