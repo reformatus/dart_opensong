@@ -51,6 +51,7 @@ class UnsupportedLine extends PartWithError {
 class VerseLineSegment {
   String? chord;
   String lyrics;
+  bool hyphenAfter = false;
 
   VerseLineSegment(this.chord, this.lyrics);
   VerseLineSegment.justLyrics(this.lyrics);

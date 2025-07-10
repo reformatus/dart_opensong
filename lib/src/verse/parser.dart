@@ -32,10 +32,11 @@ List<Verse> getVersesFromString(String string) {
     } else {
       // TODO trim whitespace everywhere?
       for (String lineIndex in lineIndexes) {
-        List<VersePart> lines = currentVerseParts
-            .where((e) => e.lineIndex == lineIndex)
-            .map((e) => e.versePart)
-            .toList();
+        List<VersePart> lines =
+            currentVerseParts
+                .where((e) => e.lineIndex == lineIndex)
+                .map((e) => e.versePart)
+                .toList();
         verses.add(
           Verse(
             currentTagType,
@@ -133,17 +134,26 @@ List<Verse> getVersesFromString(String string) {
 }
 
 VerseLine parseLineFromSeparate(String chords, String lyrics) {
+  lyrics = lyrics.padRight(chords.length);
+
   List<VerseLineSegment> lineSegments = [];
-  var chordMatches = RegExp(r'[^ ]+').allMatches(chords).toList();
+  List<({int start, String? chord})> chordMatches =
+      RegExp(
+        r'[^ ]+',
+      ).allMatches(chords).map((e) => (start: e.start, chord: e[0])).toList();
 
   if (chordMatches.isEmpty) {
     return VerseLine.justLyrics(lyrics);
   }
 
+  if (chordMatches[0].start != 0) {
+    chordMatches.insert(0, (start: 0, chord: null));
+  }
+
   for (var i = 0; i < chordMatches.length; i++) {
     int start = chordMatches[i].start;
     if (start >= lyrics.length) {
-      lineSegments.add(VerseLineSegment.justChord(chordMatches[i][0]));
+      lineSegments.add(VerseLineSegment.justChord(chordMatches[i].chord));
       continue;
     }
 
@@ -155,13 +165,47 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
       }
     }
 
-    lineSegments.add(
-      VerseLineSegment(
-        chordMatches[i][0],
-        lyrics.substring(start, end).replaceAll('_', ''),
-      ),
-    );
+    var resultLyrics = lyrics.substring(start, end);
+
+    // Remove chord alignment padding
+    resultLyrics = resultLyrics.replaceAll('_', '');
+
+    lineSegments.add(VerseLineSegment(chordMatches[i].chord, resultLyrics));
   }
+
+  // Get hyphenation and leading spaces in order
+  for (var i = 0; i < lineSegments.length; i++) {
+    VerseLineSegment current = lineSegments[i];
+
+    // Cancel hyphen if next has leading space or is end of line
+    bool nextCancelsHyphen =
+        (lineSegments.length > i + 1)
+            ? lineSegments[i + 1].lyrics.startsWith(' ')
+            : true;
+
+    if (!current.lyrics.endsWith(' ') && !nextCancelsHyphen)
+      current.hyphenAfter = true;
+
+    // Remove leading space from current if previous already has trailing or is empty
+    if (i > 0 &&
+        (lineSegments[i - 1].lyrics.endsWith(' ') ||
+            lineSegments[i - 1].lyrics.isEmpty)) {
+      current.lyrics = current.lyrics.replaceAll(
+        RegExp(r'^[ ]+', multiLine: true),
+        '',
+      );
+    }
+
+    // Replace two or more spaces with a single one
+    current.lyrics = current.lyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
+    if (current.lyrics == ' ') current.lyrics = '';
+  }
+
+  // Clean up trailing spaces from last
+  lineSegments.last.lyrics = lineSegments.last.lyrics.replaceAll(
+    RegExp(r'[ ]+$', multiLine: true),
+    '',
+  );
 
   return VerseLine(lineSegments);
 }
