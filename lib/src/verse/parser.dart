@@ -55,10 +55,9 @@ List<Verse> getVersesFromString(String string) {
   String prevLine = "";
   for (String line in string.split('\n')) {
     // Trim empty lines
-    if (line.trim().isEmpty)
+    if (line.trim().isEmpty) {
       continue;
-    //! Chords line
-    else if (line.startsWith('.')) {
+    } else if (line.startsWith('.')) {
       // If we already had current chords, then add them as a line without lyrics (Vamp)
       if (prevLine.startsWith('.')) {
         currentVerseParts.add((
@@ -183,8 +182,9 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
             ? lineSegments[i + 1].lyrics.startsWith(' ')
             : true;
 
-    if (!current.lyrics.endsWith(' ') && !nextCancelsHyphen)
+    if (!current.lyrics.endsWith(' ') && !nextCancelsHyphen) {
       current.hyphenAfter = true;
+    }
 
     // Remove leading space from current if previous already has trailing or is empty
     if (i > 0 &&
