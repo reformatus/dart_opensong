@@ -12,3 +12,6 @@
 
 #### Lyrics parsing:
 - Add `.hyphenAfter` to `VerseLinePart`s
+
+## 0.0.4
+- Trim whitespace from chords and comments

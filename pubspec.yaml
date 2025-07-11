@@ -5,7 +5,7 @@ issue_tracker: https://github.com/reformatus/dart_opensong/issues
 homepage: https://reflabs.hu/dart_opensong
 documentation: https://reflabs.hu/dart_opensong/doc/api
 
-version: 0.0.3
+version: 0.0.4
 
 environment:
   sdk: ^3.7.0
