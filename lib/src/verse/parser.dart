@@ -65,7 +65,7 @@ List<Verse> getVersesFromString(String string) {
           versePart: parseLineFromSeparate(currentChords, ""),
         ));
       }
-      currentChords = line.substring(1);
+      currentChords = line.substring(1).trim();
     }
     //! New tag
     else if (line.startsWith('[')) {
@@ -86,16 +86,16 @@ List<Verse> getVersesFromString(String string) {
     else if (line.startsWith(';')) {
       currentVerseParts.add((
         lineIndex: "",
-        versePart: VersePart.comment(line.substring(1)),
+        versePart: VersePart.comment(line.substring(1).trim()),
       ));
     }
     //! Unhandled line type (printing instructions)
     else if (line.startsWith('-')) {
       currentVerseParts.add((lineIndex: "", versePart: UnsupportedLine(line)));
+      //! Lyrics line
     } else {
       String lineIndex = "";
 
-      //! Lyrics line
       // Add space to beginning of line if missing
       if (!line.startsWith(RegExp(r'[0-9 ]'))) {
         line = ' $line';
