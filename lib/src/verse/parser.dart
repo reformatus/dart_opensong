@@ -65,7 +65,10 @@ List<Verse> getVersesFromString(String string) {
           versePart: parseLineFromSeparate(currentChords, ""),
         ));
       }
-      currentChords = line.substring(1).trim();
+      // Only trim the right side: leading whitespace is the offset between the
+      // leading '.' and the first chord, and is used to align chords with the
+      // lyric line (see parseLineFromSeparate).
+      currentChords = line.substring(1).trimRight();
     }
     //! New tag
     else if (line.startsWith('[')) {

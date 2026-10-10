@@ -131,6 +131,37 @@ void main() {
       expect((verses[4].parts[0] as VerseLine).lyrics, equals("Test4"));
     });
 
+    test('Leading indentation of chord lines is preserved', () {
+      // Regression test for
+      // https://github.com/reformatus/dart_opensong/issues/4
+      // The whitespace between the leading '.' and the first chord is a
+      // meaningful column offset, so it must not be trimmed away.
+      var verses = getVersesFromString("""
+[Verze]
+.        G               D
+ Megáldott az Úr a házamtelekén,
+.      Em            C           G
+ ki félte őtet szívvel és lélekkel.
+""");
+      expect(verses, hasLength(1));
+      expect(verses[0].parts, hasLength(2));
+
+      // First chord line has an 8-column offset, so the line starts with a
+      // chord-less prefix and G lands at column 8.
+      var firstLine = verses[0].parts[0] as VerseLine;
+      expect(firstLine.segments.first.chord, isNull);
+      expect(firstLine.segments.first.lyrics, equals("Megáldot"));
+      expect(firstLine.segments[1].chord, equals("G"));
+      expect(firstLine.lyrics, equals("Megáldott az Úr a házamtelekén,"));
+
+      // Second chord line has a 6-column offset.
+      var secondLine = verses[0].parts[1] as VerseLine;
+      expect(secondLine.segments.first.chord, isNull);
+      expect(secondLine.segments.first.lyrics, equals("ki fél"));
+      expect(secondLine.segments[1].chord, equals("Em"));
+      expect(secondLine.lyrics, equals("ki félte őtet szívvel és lélekkel."));
+    });
+
     test('Special line types and errors', () {
       var verses = getVersesFromString("""
 [V1]
