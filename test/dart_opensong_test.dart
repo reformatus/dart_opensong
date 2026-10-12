@@ -346,6 +346,29 @@ void main() {
       expect(_chordsOf('[V]\n1One\n.C G\n2Two\n'), equals([null, 'C', 'G']));
     });
 
+    test('Whitespace-only chord line produces no part', () {
+      var verses = getVersesFromString('[V]\n abc\n.   \n');
+      expect(verses, hasLength(1));
+      expect(verses[0].parts, hasLength(1));
+      expect(_chordsOf('[V]\n abc\n.   \n'), equals([null]));
+    });
+
+    test('Chord line keeps its position relative to a comment', () {
+      var verses = getVersesFromString('[V]\n.C\n;note\n.D\n');
+      expect(verses[0].parts, hasLength(3));
+      expect((verses[0].parts[0] as VerseLine).segments[0].chord, equals('C'));
+      expect(verses[0].parts[1], TypeMatcher<CommentLine>());
+      expect((verses[0].parts[2] as VerseLine).segments[0].chord, equals('D'));
+    });
+
+    test('Chord line keeps its position relative to an unsupported line', () {
+      var verses = getVersesFromString('[V]\n.C\n-!!\n.D\n');
+      expect(verses[0].parts, hasLength(3));
+      expect((verses[0].parts[0] as VerseLine).segments[0].chord, equals('C'));
+      expect(verses[0].parts[1], TypeMatcher<UnsupportedLine>());
+      expect((verses[0].parts[2] as VerseLine).segments[0].chord, equals('D'));
+    });
+
     test('CRLF line endings are handled', () {
       var verses = getVersesFromString(
         '[V]\r\n'

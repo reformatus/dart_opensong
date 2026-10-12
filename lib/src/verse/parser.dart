@@ -20,14 +20,17 @@ List<Verse> getVersesFromString(String string) {
 
   String currentChords = "";
   bool currentChordsConsumed = false;
+  int pendingChordsIndex = 0;
 
   // A chord line that no lyric line followed is itself a chord-only line.
   void addPendingChords() {
-    if (currentChords.isEmpty || currentChordsConsumed) return;
-    currentVerseParts.add((
-      lineIndex: "",
-      versePart: parseLineFromSeparate(currentChords, ""),
-    ));
+    if (currentChords.trim().isEmpty || currentChordsConsumed) return;
+    currentVerseParts.insert(
+      pendingChordsIndex < currentVerseParts.length
+          ? pendingChordsIndex
+          : currentVerseParts.length,
+      (lineIndex: "", versePart: parseLineFromSeparate(currentChords, "")),
+    );
   }
 
   void finalizeTag() {
@@ -53,6 +56,7 @@ List<Verse> getVersesFromString(String string) {
     currentTagIndex = "";
     currentChords = "";
     currentChordsConsumed = false;
+    pendingChordsIndex = 0;
     currentVerseParts = [];
   }
 
@@ -66,6 +70,7 @@ List<Verse> getVersesFromString(String string) {
       // chords with the lyric line (see parseLineFromSeparate).
       currentChords = line.substring(1);
       currentChordsConsumed = false;
+      pendingChordsIndex = currentVerseParts.length;
     }
     //! New tag
     else if (line.startsWith('[')) {
