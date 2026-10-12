@@ -134,6 +134,7 @@ List<Verse> getVersesFromString(String string) {
   return verses;
 }
 
+/// Aligns a chord line and a lyric line into [VerseLineSegment]s.
 VerseLine parseLineFromSeparate(String chords, String lyrics) {
   final length = chords.length > lyrics.length ? chords.length : lyrics.length;
 
