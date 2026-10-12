@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'verse.dart';
 
 /// Parses chords and lyrics to verses. Returns a List of Verses and a List of errors encountered to display for the user.
@@ -54,7 +56,7 @@ List<Verse> getVersesFromString(String string) {
     currentVerseParts = [];
   }
 
-  for (String line in string.split('\n')) {
+  for (String line in const LineSplitter().convert(string)) {
     // Trim empty lines
     if (line.trim().isEmpty) {
       continue;

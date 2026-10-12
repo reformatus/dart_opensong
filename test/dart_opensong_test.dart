@@ -346,6 +346,20 @@ void main() {
       expect(_chordsOf('[V]\n1One\n.C G\n2Two\n'), equals([null, 'C', 'G']));
     });
 
+    test('CRLF line endings are handled', () {
+      var verses = getVersesFromString(
+        '[V]\r\n'
+        '.  em            D             C              \r\n'
+        ' A harcokban nem nekünk kell győznünk.\r\n',
+      );
+      var line = verses[0].parts[0] as VerseLine;
+      expect(line.segments, hasLength(4));
+      expect(line.segments.every((s) => s.chord != '\r'), isTrue);
+      expect(line.segments.last.chord, equals('C'));
+      expect(line.segments.last.lyrics, equals('őznünk.'));
+      expect(line.lyrics, equals('A harcokban nem nekünk kell győznünk.'));
+    });
+
     test('Special line types and errors', () {
       var verses = getVersesFromString("""
 [V1]
