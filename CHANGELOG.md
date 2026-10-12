@@ -13,6 +13,13 @@
 #### Lyrics parsing:
 - Add `.hyphenAfter` to `VerseLinePart`s
 
+## 0.0.7
+#### Lyrics parsing:
+- Parse chord and lyric lines together, column by column: a chord struck before
+  the singing starts forms its own chord-only segment, and alignment padding at
+  the start/end of a line is trimmed
+- Drop segments that carry neither a chord nor lyrics
+
 ## 0.0.6
 #### Lyrics parsing:
 - Keep all input whitespace while aligning chords and lyrics, and trim only the

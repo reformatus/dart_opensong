@@ -57,7 +57,10 @@ void main() {
         equals("abcd"),
       );
       expect((verses[0].parts[0] as VerseLine).segments[2].chord, equals("A#"));
-      expect((verses[0].parts[0] as VerseLine).segments[2].lyrics, equals("k "));
+      expect(
+        (verses[0].parts[0] as VerseLine).segments[2].lyrics,
+        equals("k "),
+      );
       expect((verses[0].parts[0] as VerseLine).segments[3].chord, equals("C"));
       expect((verses[0].parts[0] as VerseLine).segments[3].lyrics, isEmpty);
       expect((verses[0].parts[0] as VerseLine).lyrics, equals("abcdefghijk "));
@@ -73,7 +76,10 @@ void main() {
         equals("ijkl"),
       );
       expect((verses[1].parts[0] as VerseLine).segments[2].chord, equals("A#"));
-      expect((verses[1].parts[0] as VerseLine).segments[2].lyrics, equals("s "));
+      expect(
+        (verses[1].parts[0] as VerseLine).segments[2].lyrics,
+        equals("s "),
+      );
       expect((verses[1].parts[0] as VerseLine).segments[3].chord, equals("C"));
       expect((verses[1].parts[0] as VerseLine).segments[3].lyrics, isEmpty);
       expect((verses[1].parts[0] as VerseLine).lyrics, equals("ijklmnopqrs "));
@@ -86,11 +92,23 @@ void main() {
       expect((verses[5].parts[0] as VerseLine).segments[4].hyphenAfter, isTrue);
       expect((verses[5].parts[0] as VerseLine).segments[5].hyphenAfter, isTrue);
 
-      expect((verses[5].parts[1] as VerseLine).segments[3].hyphenAfter, isFalse);
-      expect((verses[5].parts[1] as VerseLine).segments[4].hyphenAfter, isFalse);
-      expect((verses[5].parts[1] as VerseLine).segments[5].hyphenAfter, isFalse);
+      expect(
+        (verses[5].parts[1] as VerseLine).segments[3].hyphenAfter,
+        isFalse,
+      );
+      expect(
+        (verses[5].parts[1] as VerseLine).segments[4].hyphenAfter,
+        isFalse,
+      );
+      expect(
+        (verses[5].parts[1] as VerseLine).segments[5].hyphenAfter,
+        isFalse,
+      );
 
-      expect((verses[6].parts[0] as VerseLine).segments[2].hyphenAfter, isFalse);
+      expect(
+        (verses[6].parts[0] as VerseLine).segments[2].hyphenAfter,
+        isFalse,
+      );
       expect((verses[6].parts[0] as VerseLine).segments[3].hyphenAfter, isTrue);
     });
 
@@ -163,17 +181,90 @@ void main() {
     });
 
     test('Leading gap between the first chord and the first syllable', () {
-      // A chord strummed before the singing starts is encoded as a leading gap
-      // on the lyric line, so it must survive parsing.
+      // A chord strummed before the singing starts forms its own chord-only
+      // segment, followed by the lyric segment.
       var verses = getVersesFromString("""
 [V]
 .C
    Hello
 """);
       var line = verses[0].parts[0] as VerseLine;
+      expect(line.segments, hasLength(2));
+      expect(line.segments[0].chord, equals("C"));
+      expect(line.segments[0].lyrics, isEmpty);
+      expect(line.segments[1].chord, isNull);
+      expect(line.segments[1].lyrics, equals("Hello"));
+    });
+
+    test("'_' is part of the syllable under a chord", () {
+      var verses = getVersesFromString("""
+[V]
+.C
+ __Hello
+""");
+      var line = verses[0].parts[0] as VerseLine;
       expect(line.segments, hasLength(1));
       expect(line.segments[0].chord, equals("C"));
-      expect(line.segments[0].lyrics, equals(" Hello"));
+      expect(line.segments[0].lyrics, equals("Hello"));
+    });
+
+    test('Leading whitespace is trimmed', () {
+      var verses = getVersesFromString("""
+[V]
+.    C
+  Hello
+""");
+      var line = verses[0].parts[0] as VerseLine;
+      expect(line.segments, hasLength(2));
+      expect(line.segments[0].chord, isNull);
+      expect(line.segments[0].lyrics, equals("Hel"));
+      expect(line.segments[1].chord, equals("C"));
+      expect(line.segments[1].lyrics, equals("lo"));
+    });
+
+    test('Completely empty segments are dropped', () {
+      // The blank region before the first chord carries no information.
+      var verses = getVersesFromString("""
+[V]
+.        G
+         Megáldott
+""");
+      var line = verses[0].parts[0] as VerseLine;
+      expect(line.segments, hasLength(1));
+      expect(line.segments[0].chord, equals("G"));
+      expect(line.segments[0].lyrics, equals("Megáldott"));
+    });
+
+    test('Chord with no lyrics under it is kept', () {
+      var verses = getVersesFromString("""
+[V]
+.C  G  A     G Asus4 B
+ Hello There   Ge____neral
+""");
+      var line = verses[0].parts[0] as VerseLine;
+      expect(line.lyrics, equals("Hello There General"));
+      expect(line.segments, hasLength(6));
+
+      expect(line.segments[0].chord, equals("C"));
+      expect(line.segments[0].lyrics, equals("Hel"));
+      expect(line.segments[0].hyphenAfter, isTrue);
+
+      expect(line.segments[1].chord, equals("G"));
+      expect(line.segments[1].lyrics, equals("lo "));
+
+      expect(line.segments[2].chord, equals("A"));
+      expect(line.segments[2].lyrics, equals("There "));
+
+      // Instrumental chord: a chord with no syllable under it.
+      expect(line.segments[3].chord, equals("G"));
+      expect(line.segments[3].lyrics, isEmpty);
+
+      expect(line.segments[4].chord, equals("Asus4"));
+      expect(line.segments[4].lyrics, equals("Ge"));
+      expect(line.segments[4].hyphenAfter, isTrue);
+
+      expect(line.segments[5].chord, equals("B"));
+      expect(line.segments[5].lyrics, equals("neral"));
     });
 
     test('Trailing whitespace is trimmed', () {
