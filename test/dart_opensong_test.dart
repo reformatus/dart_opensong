@@ -1,6 +1,15 @@
 import 'package:dart_opensong/dart_opensong.dart';
 import 'package:test/test.dart';
 
+/// The chords of every segment in [input], in order (`null` for chord-less).
+List<String?> _chordsOf(String input) =>
+    getVersesFromString(input)
+        .expand((verse) => verse.parts)
+        .whereType<VerseLine>()
+        .expand((line) => line.segments)
+        .map((segment) => segment.chord)
+        .toList();
+
 void main() {
   group('Validate lyrics parsing for', () {
     test('Basic tags', () {
@@ -275,6 +284,66 @@ void main() {
       var line = verses[0].parts[0] as VerseLine;
       expect(line.segments, hasLength(1));
       expect(line.segments[0].lyrics, equals("Hello World"));
+    });
+
+    test('Two consecutive chord lines keep both', () {
+      expect(
+        _chordsOf('[B1]\n.F C Gadd4\n.d7 a Gadd4\n'),
+        equals(['F', 'C', 'Gadd4', 'd7', 'a', 'Gadd4']),
+      );
+    });
+
+    test('Three consecutive chord lines keep all', () {
+      expect(
+        _chordsOf('.A B\n.C D\n.E F\n'),
+        equals(['A', 'B', 'C', 'D', 'E', 'F']),
+      );
+    });
+
+    test('Chord lines followed by a lyric line align to it', () {
+      expect(
+        _chordsOf('[B1]\n.F C Gadd4\n.d7 a Gadd4\n Szoveg\n'),
+        equals(['F', 'C', 'Gadd4', 'd7', 'a', 'Gadd4']),
+      );
+    });
+
+    test('Chord line at the end of a section is kept', () {
+      var verses = getVersesFromString('[V]\n.C G\n[C]\n ccc\n');
+      expect(verses.map((v) => v.tag), equals(['V', 'C']));
+      expect(_chordsOf('[V]\n.C G\n[C]\n ccc\n'), equals(['C', 'G', null]));
+    });
+
+    test('Chord line at the end of the file is kept', () {
+      var verses = getVersesFromString(' Szoveg itt\n.C   G\n');
+      expect(verses, hasLength(1));
+      expect(verses[0].parts, hasLength(2));
+      expect(_chordsOf(' Szoveg itt\n.C   G\n'), equals([null, 'C', 'G']));
+    });
+
+    test('Chord line before a blank line and a new tag is kept', () {
+      var verses = getVersesFromString('[V]\n.A B\n\n[C]\n ccc\n');
+      expect(verses.map((v) => v.tag), equals(['V', 'C']));
+      expect(_chordsOf('[V]\n.A B\n\n[C]\n ccc\n'), equals(['A', 'B', null]));
+    });
+
+    test('Chord-only section is unchanged', () {
+      var verses = getVersesFromString('[Intro]\n.Am  F\n');
+      expect(verses, hasLength(1));
+      expect(verses[0].tag, equals('Intro'));
+      expect(_chordsOf('[Intro]\n.Am  F\n'), equals(['Am', 'F']));
+    });
+
+    test('Numbered lyric lines ending in a chord line keep grouping', () {
+      var verses = getVersesFromString('[V]\n1Hello\n.C G\n2World\n.C D\n');
+      expect(verses.map((v) => v.tag), equals(['V1', 'V2', 'V']));
+      expect(
+        _chordsOf('[V]\n1Hello\n.C G\n2World\n.C D\n'),
+        equals([null, 'C', 'G', 'C', 'D']),
+      );
+    });
+
+    test('Consumed chord lines are not emitted twice', () {
+      expect(_chordsOf('[V]\n1One\n.C G\n2Two\n'), equals([null, 'C', 'G']));
     });
 
     test('CRLF line endings are handled', () {

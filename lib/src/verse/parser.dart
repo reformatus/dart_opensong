@@ -19,57 +19,53 @@ List<Verse> getVersesFromString(String string) {
   String currentTagIndex = "";
 
   String currentChords = "";
+  bool currentChordsConsumed = false;
+
+  // A chord line that no lyric line followed is itself a chord-only line.
+  void addPendingChords() {
+    if (currentChords.isEmpty || currentChordsConsumed) return;
+    currentVerseParts.add((
+      lineIndex: "",
+      versePart: parseLineFromSeparate(currentChords, ""),
+    ));
+  }
 
   void finalizeTag() {
+    addPendingChords();
+
     // Get unique line indexes
     Set<String> lineIndexes = {};
     lineIndexes.addAll(currentVerseParts.map((e) => e.lineIndex));
 
-    if (lineIndexes.isEmpty && currentChords.isNotEmpty) {
+    // TODO trim whitespace everywhere?
+    for (String lineIndex in lineIndexes) {
+      List<VersePart> lines =
+          currentVerseParts
+              .where((e) => e.lineIndex == lineIndex)
+              .map((e) => e.versePart)
+              .toList();
       verses.add(
-        Verse(currentTagType, int.tryParse(currentTagIndex), [
-          parseLineFromSeparate(currentChords, ""),
-        ]),
+        Verse(currentTagType, int.tryParse(currentTagIndex + lineIndex), lines),
       );
-    } else {
-      // TODO trim whitespace everywhere?
-      for (String lineIndex in lineIndexes) {
-        List<VersePart> lines =
-            currentVerseParts
-                .where((e) => e.lineIndex == lineIndex)
-                .map((e) => e.versePart)
-                .toList();
-        verses.add(
-          Verse(
-            currentTagType,
-            int.tryParse(currentTagIndex + lineIndex),
-            lines,
-          ),
-        );
-      }
     }
+
     currentTagType = "";
     currentTagIndex = "";
     currentChords = "";
+    currentChordsConsumed = false;
     currentVerseParts = [];
   }
 
-  String prevLine = "";
   for (String line in const LineSplitter().convert(string)) {
     // Trim empty lines
     if (line.trim().isEmpty) {
       continue;
     } else if (line.startsWith('.')) {
-      // If we already had current chords, then add them as a line without lyrics (Vamp)
-      if (prevLine.startsWith('.')) {
-        currentVerseParts.add((
-          lineIndex: "",
-          versePart: parseLineFromSeparate(currentChords, ""),
-        ));
-      }
+      addPendingChords();
       // Both leading and trailing whitespace are column offsets that align the
       // chords with the lyric line (see parseLineFromSeparate).
       currentChords = line.substring(1);
+      currentChordsConsumed = false;
     }
     //! New tag
     else if (line.startsWith('[')) {
@@ -125,10 +121,9 @@ List<Verse> getVersesFromString(String string) {
           lineIndex: lineIndex,
           versePart: parseLineFromSeparate(currentChords, line.substring(1)),
         ));
+        currentChordsConsumed = true;
       }
     }
-
-    prevLine = line;
   }
 
   finalizeTag();

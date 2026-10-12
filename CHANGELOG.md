@@ -32,3 +32,9 @@
   the singing starts forms its own chord-only segment, and alignment padding at
   the start/end of a line is trimmed
 - Drop segments that carry neither a chord nor lyrics
+
+## 0.0.8
+#### Lyrics parsing:
+- Keep chord lines that are not followed by a lyric line instead of dropping
+  them
+- Handle CRLF line endings
