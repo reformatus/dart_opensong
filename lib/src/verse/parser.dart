@@ -65,10 +65,9 @@ List<Verse> getVersesFromString(String string) {
           versePart: parseLineFromSeparate(currentChords, ""),
         ));
       }
-      // Only trim the right side: leading whitespace is the offset between the
-      // leading '.' and the first chord, and is used to align chords with the
-      // lyric line (see parseLineFromSeparate).
-      currentChords = line.substring(1).trimRight();
+      // Both leading and trailing whitespace are column offsets that align the
+      // chords with the lyric line (see parseLineFromSeparate).
+      currentChords = line.substring(1);
     }
     //! New tag
     else if (line.startsWith('[')) {
@@ -145,7 +144,7 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
       ).allMatches(chords).map((e) => (start: e.start, chord: e[0])).toList();
 
   if (chordMatches.isEmpty) {
-    return VerseLine.justLyrics(lyrics);
+    return VerseLine.justLyrics(_trimTrailingAlignmentSpaces(lyrics));
   }
 
   if (chordMatches[0].start != 0) {
@@ -204,11 +203,16 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
     if (current.lyrics == ' ') current.lyrics = '';
   }
 
-  // Clean up trailing spaces from last
-  lineSegments.last.lyrics = lineSegments.last.lyrics.replaceAll(
-    RegExp(r'[ ]+$', multiLine: true),
-    '',
+  // Trim alignment/padding whitespace from the end of the parsed line, keeping
+  // any leading gap between the first chord and the first syllable (e.g. a
+  // chord strummed before the singing starts).
+  lineSegments.last.lyrics = _trimTrailingAlignmentSpaces(
+    lineSegments.last.lyrics,
   );
 
   return VerseLine(lineSegments);
 }
+
+/// Removes the alignment/padding whitespace from the end of [text].
+String _trimTrailingAlignmentSpaces(String text) =>
+    text.replaceAll(RegExp(r'[ ]+$'), '');
