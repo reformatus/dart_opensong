@@ -38,3 +38,8 @@
 - Keep chord lines that are not followed by a lyric line instead of dropping
   them
 - Handle CRLF line endings
+
+## 0.0.9
+#### Lyrics parsing:
+- Skip chord lines that contain only whitespace
+- Keep a chord line's reading order relative to comments and unsupported lines
