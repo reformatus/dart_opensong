@@ -13,6 +13,11 @@
 #### Lyrics parsing:
 - Add `.hyphenAfter` to `VerseLinePart`s
 
+## 0.0.6
+#### Lyrics parsing:
+- Keep all input whitespace while aligning chords and lyrics, and trim only the
+  trailing alignment padding from parsed lines
+
 ## 0.0.5
 #### Lyrics parsing:
 - Preserve the leading indentation of chord lines so chords stay aligned over

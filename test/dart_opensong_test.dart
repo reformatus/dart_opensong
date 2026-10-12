@@ -162,6 +162,30 @@ void main() {
       expect(secondLine.lyrics, equals("ki félte őtet szívvel és lélekkel."));
     });
 
+    test('Leading gap between the first chord and the first syllable', () {
+      // A chord strummed before the singing starts is encoded as a leading gap
+      // on the lyric line, so it must survive parsing.
+      var verses = getVersesFromString("""
+[V]
+.C
+   Hello
+""");
+      var line = verses[0].parts[0] as VerseLine;
+      expect(line.segments, hasLength(1));
+      expect(line.segments[0].chord, equals("C"));
+      expect(line.segments[0].lyrics, equals(" Hello"));
+    });
+
+    test('Trailing whitespace is trimmed', () {
+      var verses = getVersesFromString("""
+[V]
+ Hello World   
+""");
+      var line = verses[0].parts[0] as VerseLine;
+      expect(line.segments, hasLength(1));
+      expect(line.segments[0].lyrics, equals("Hello World"));
+    });
+
     test('Special line types and errors', () {
       var verses = getVersesFromString("""
 [V1]
