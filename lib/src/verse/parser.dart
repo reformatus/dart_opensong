@@ -134,49 +134,61 @@ List<Verse> getVersesFromString(String string) {
   return verses;
 }
 
+/// Aligns a chord line and a lyric line into [VerseLineSegment]s.
 VerseLine parseLineFromSeparate(String chords, String lyrics) {
-  lyrics = lyrics.padRight(chords.length);
+  final length = chords.length > lyrics.length ? chords.length : lyrics.length;
 
+  // Read the chord and lyric lines together, column by column. A chord token
+  // opens a segment and the next one closes it. The first lyric character
+  // starts the voice: a chord struck before it is an intro chord that forms its
+  // own (chord-only) segment, unless the voice starts in the chord's own column,
+  // where the chord keeps the syllable under it.
   List<VerseLineSegment> lineSegments = [];
-  List<({int start, String? chord})> chordMatches =
-      RegExp(
-        r'[^ ]+',
-      ).allMatches(chords).map((e) => (start: e.start, chord: e[0])).toList();
+  VerseLineSegment? current;
+  bool voiceStarted = false;
 
-  if (chordMatches.isEmpty) {
-    return VerseLine.justLyrics(_trimTrailingAlignmentSpaces(lyrics));
-  }
+  for (var column = 0; column < length; column++) {
+    final startsChord =
+        column < chords.length &&
+        chords[column] != ' ' &&
+        (column == 0 || chords[column - 1] == ' ');
 
-  if (chordMatches[0].start != 0) {
-    chordMatches.insert(0, (start: 0, chord: null));
-  }
-
-  for (var i = 0; i < chordMatches.length; i++) {
-    int start = chordMatches[i].start;
-    if (start >= lyrics.length) {
-      lineSegments.add(VerseLineSegment.justChord(chordMatches[i].chord));
-      continue;
-    }
-
-    int end = lyrics.length;
-    if (i < chordMatches.length - 1) {
-      end = chordMatches[i + 1].start;
-      if (end > lyrics.length) {
-        end = lyrics.length;
+    String? chord;
+    if (startsChord) {
+      var end = column;
+      while (end < chords.length && chords[end] != ' ') {
+        end++;
       }
+      chord = chords.substring(column, end);
     }
 
-    var resultLyrics = lyrics.substring(start, end);
+    final character = column < lyrics.length ? lyrics[column] : ' ';
 
-    // Remove chord alignment padding
-    resultLyrics = resultLyrics.replaceAll('_', '');
+    if (!voiceStarted && character != ' ') {
+      if (chord == null &&
+          current != null &&
+          current.chord != null &&
+          current.lyrics.trim().isEmpty) {
+        current = null;
+      }
+      voiceStarted = true;
+    }
 
-    lineSegments.add(VerseLineSegment(chordMatches[i].chord, resultLyrics));
+    if (chord != null) {
+      current = VerseLineSegment(chord, '');
+      lineSegments.add(current);
+    } else if (current == null) {
+      current = VerseLineSegment(null, '');
+      lineSegments.add(current);
+    }
+
+    // '_' is part of the syllable but is not rendered.
+    if (character != '_') current.lyrics += character;
   }
 
   // Get hyphenation and leading spaces in order
   for (var i = 0; i < lineSegments.length; i++) {
-    VerseLineSegment current = lineSegments[i];
+    VerseLineSegment segment = lineSegments[i];
 
     // Cancel hyphen if next has leading space or is end of line
     bool nextCancelsHyphen =
@@ -184,35 +196,50 @@ VerseLine parseLineFromSeparate(String chords, String lyrics) {
             ? lineSegments[i + 1].lyrics.startsWith(' ')
             : true;
 
-    if (!current.lyrics.endsWith(' ') && !nextCancelsHyphen) {
-      current.hyphenAfter = true;
+    if (!segment.lyrics.endsWith(' ') && !nextCancelsHyphen) {
+      segment.hyphenAfter = true;
     }
 
     // Remove leading space from current if previous already has trailing or is empty
     if (i > 0 &&
         (lineSegments[i - 1].lyrics.endsWith(' ') ||
             lineSegments[i - 1].lyrics.isEmpty)) {
-      current.lyrics = current.lyrics.replaceAll(
-        RegExp(r'^[ ]+', multiLine: true),
-        '',
-      );
+      segment.lyrics = segment.lyrics.replaceAll(RegExp(r'^[ ]+'), '');
     }
 
     // Replace two or more spaces with a single one
-    current.lyrics = current.lyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
-    if (current.lyrics == ' ') current.lyrics = '';
+    segment.lyrics = segment.lyrics.replaceAll(RegExp(r'[ ]{2,}'), ' ');
+    if (segment.lyrics == ' ') segment.lyrics = '';
   }
 
-  // Trim alignment/padding whitespace from the end of the parsed line, keeping
-  // any leading gap between the first chord and the first syllable (e.g. a
-  // chord strummed before the singing starts).
-  lineSegments.last.lyrics = _trimTrailingAlignmentSpaces(
-    lineSegments.last.lyrics,
+  // A segment with neither a chord nor lyrics carries no information.
+  lineSegments.removeWhere(
+    (segment) => segment.chord == null && segment.lyrics.isEmpty,
   );
+
+  if (lineSegments.isNotEmpty) {
+    // Trim alignment/padding whitespace from the start and end of the line.
+    lineSegments.first.lyrics = _trimAlignmentSpaces(
+      lineSegments.first.lyrics,
+      trailing: false,
+    );
+    lineSegments.last.lyrics = _trimAlignmentSpaces(
+      lineSegments.last.lyrics,
+      leading: false,
+    );
+  }
 
   return VerseLine(lineSegments);
 }
 
-/// Removes the alignment/padding whitespace from the end of [text].
-String _trimTrailingAlignmentSpaces(String text) =>
-    text.replaceAll(RegExp(r'[ ]+$'), '');
+/// Removes the alignment/padding whitespace from the start and/or end of [text].
+String _trimAlignmentSpaces(
+  String text, {
+  bool leading = true,
+  bool trailing = true,
+}) {
+  var result = text;
+  if (leading) result = result.replaceAll(RegExp(r'^[ ]+'), '');
+  if (trailing) result = result.replaceAll(RegExp(r'[ ]+$'), '');
+  return result;
+}

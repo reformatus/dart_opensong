@@ -1,11 +1,11 @@
 name: dart_opensong
-description: Support for OpenSong file formats in Dart.
+description: Support for reading and writing OpenSong song files in Dart, including parsing chord and lyric lines into aligned verses.
 repository: https://github.com/reformatus/dart_opensong
 issue_tracker: https://github.com/reformatus/dart_opensong/issues
 homepage: https://reflabs.hu/dart_opensong
 documentation: https://reflabs.hu/dart_opensong/doc/api
 
-version: 0.0.6
+version: 0.0.7
 
 environment:
   sdk: ^3.7.0
